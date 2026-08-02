@@ -11,7 +11,7 @@ export default function Home() {
   const fetchRestaurants = async (query = "") => {
     setLoading(true);
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/restaurants/?search=${query}`);
+      const response = await fetch(`/api/restaurants/?search=${query}`);
       const data = await response.json();
       setRestaurants(data);
     } catch (error) {

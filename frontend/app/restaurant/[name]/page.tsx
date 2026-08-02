@@ -4,7 +4,9 @@ import { useParams } from "next/navigation";
 
 export default function RestaurantReviews() {
   const params = useParams();
-  const restaurantName = decodeURIComponent(params.name as string);
+  const rawName = params?.name;
+  // Safely decode the restaurant name (guards against undefined / non-string params)
+  const restaurantName = typeof rawName === "string" ? decodeURIComponent(rawName) : "";
 
   const [reviews, setReviews] = useState([]);
   const [stats, setStats] = useState({ average_rating: 0, total_reviews: 0 });
@@ -17,7 +19,7 @@ export default function RestaurantReviews() {
 
   const fetchReviews = async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/restaurants/${restaurantName}/reviews/`);
+      const response = await fetch(`/api/restaurants/${restaurantName}/reviews/`);
       const data = await response.json();
       setReviews(data.reviews || []);
       setStats(data.stats || { average_rating: 0, total_reviews: 0 });
@@ -28,13 +30,15 @@ export default function RestaurantReviews() {
   };
 
   useEffect(() => {
-    fetchReviews();
+    if (restaurantName) {
+      fetchReviews();
+    }
   }, [restaurantName]);
 
   const submitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/restaurants/${restaurantName}/reviews/`, {
+      const response = await fetch(`/api/restaurants/${restaurantName}/reviews/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -59,6 +63,17 @@ export default function RestaurantReviews() {
   };
 
   if (loading) return <p className="text-center mt-20 text-gray-500">Loading reviews...</p>;
+
+  if (!restaurantName) {
+    return (
+      <main className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-4xl mx-auto text-center mt-20">
+          <h1 className="text-3xl font-bold text-gray-800 mb-4">Restaurant not found</h1>
+          <p className="text-gray-500">Please go back and select a restaurant from the search results.</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-gray-50 p-8">
@@ -135,3 +150,4 @@ export default function RestaurantReviews() {
     </main>
   );
 }
+
